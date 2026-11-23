@@ -1,7 +1,7 @@
 export const sealViewTemplate = `
 <section class="panel">
   <h2>封批升代</h2>
-  <p class="hint">校准有效且无开放游标时方可封批。</p>
+  <p class="hint">校准有效且无开放游标时方可封批。须持批次锁，占锁被拒则快照与批次零改、整笔拒写。</p>
   <div class="form-row">
     <div><label>批次</label>
       <select v-model.number="sealForm.batch_id"><option v-for="b in sealableBatches" :key="b.id" :value="b.id">{{ b.batch_code }}</option></select>

@@ -1,7 +1,7 @@
 export const probesViewTemplate = `
 <section class="panel">
   <h2>探头登记</h2>
-  <p class="hint">探头须挂靠仓间；离线探头禁止新建批次。</p>
+  <p class="hint">探头须挂靠仓间；离线探头禁止新建批次，入批另须持仓间锁，无锁拒写不生成正式批次。</p>
   <div class="form-row">
     <div><label>探头编码</label><input v-model="probeForm.probe_code"/></div>
     <div><label>仓间</label>

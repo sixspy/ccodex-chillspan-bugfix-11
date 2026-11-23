@@ -1,6 +1,7 @@
 export const reconcileViewTemplate = `
 <section class="panel">
   <h2>仓间对账互证</h2>
+  <p class="hint">在批计数仅统计持锁写入的正式批次，无锁拒写批次不计入，配额互证因此不被无锁批污染。</p>
   <div class="form-row">
     <div><label>仓间编码</label><input v-model="reconCode"/></div>
     <div><label>批次互证编码</label><input v-model="proofCode"/></div>

@@ -13,6 +13,9 @@ from validators import summarize_points, validate_probe_online, validate_temp_po
 
 router = APIRouter(tags=["batches"])
 
+# 锁批门禁（甲路径）：require_lock 拒占即抛 LockDenied(409)，
+# temp_batches 正式表零增、整笔拒写；不留待锁/影子批次。
+
 
 def _next_batch_code(conn, chamber_id: int) -> str:
     ch = conn.execute(
@@ -88,6 +91,7 @@ def create_batch(body: BatchIn, authorization: AuthHeader = None):
     user = require_writer(authorization)
     lock_key = f"chamber:{body.chamber_id}"
     with connect() as conn:
+        # 硬闸门：拒占即抛 LockDenied，正式批次零增，无锁不入批
         require_lock(conn, lock_key, user)
         try:
             ch = conn.execute(

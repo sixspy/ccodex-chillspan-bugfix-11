@@ -1,4 +1,9 @@
-"""探头登记与在线态。"""
+"""探头登记与在线态。
+
+锁批门禁同源（甲路径）：本服务只写 probes 登记/在线态，不写 temp_batches；
+离线探头在 batches_svc 被 validate_probe_online 拦截，且入批写口另有 require_lock
+硬闸门，故探头维度不会放行任何无锁正式批。
+"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException

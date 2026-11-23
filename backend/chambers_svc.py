@@ -1,4 +1,9 @@
-"""冷库仓间登记与配额。"""
+"""冷库仓间登记与配额。
+
+锁批门禁同源（甲路径）：本服务不写 temp_batches；仓间详情的 recent_batches 与
+active_batch_count 只读正式批次表，而正式表唯一写口 batches_svc 已被 require_lock
+硬闸门把守，故这里呈现的在批清单不可能含无锁正式批。
+"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException

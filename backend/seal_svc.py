@@ -13,6 +13,9 @@ from validators import require_calibration_fresh, validate_batch_sealable
 
 router = APIRouter(tags=["seal"])
 
+# 锁批门禁（甲路径）：封批须持批次锁；require_lock 拒占即抛 LockDenied(409)，
+# seal_snapshots 与 temp_batches 零改，整笔拒写，无锁不封批。
+
 
 @router.get("/api/seals")
 def list_seals(authorization: AuthHeader = None):
@@ -30,6 +33,7 @@ def seal_batch(body: SealIn, authorization: AuthHeader = None):
     user = require_writer(authorization)
     lock_key = f"batch:{body.batch_id}"
     with connect() as conn:
+        # 硬闸门：拒占即抛 LockDenied，封批快照与批次正式表零改
         require_lock(conn, lock_key, user)
         try:
             batch = conn.execute(

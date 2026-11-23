@@ -13,6 +13,9 @@ from validators import detect_excursion
 
 router = APIRouter(tags=["excursions"])
 
+# 锁批门禁（甲路径）：开/闭游标均须持批次锁；require_lock 拒占即抛 LockDenied(409)，
+# excursion_cursors 与 temp_batches 零改，整笔拒写，无锁不动正式批。
+
 
 @router.get("/api/excursions")
 def list_excursions(authorization: AuthHeader = None, status: str | None = None):
@@ -34,6 +37,7 @@ def open_excursion(body: ExcursionOpenIn, authorization: AuthHeader = None):
     user = require_writer(authorization)
     lock_key = f"batch:{body.batch_id}"
     with connect() as conn:
+        # 硬闸门：拒占即抛 LockDenied，游标与批次状态零改
         require_lock(conn, lock_key, user)
         try:
             batch = conn.execute(
@@ -94,22 +98,28 @@ def close_excursion(body: ExcursionCloseIn, authorization: AuthHeader = None):
             raise HTTPException(404, "游标不存在")
         if row["status"] != "开放":
             raise HTTPException(409, "游标已关闭")
-        now = now_iso()
-        conn.execute(
-            """UPDATE excursion_cursors SET status='已闭', closed_at=?, note=?
-               WHERE id=?""",
-            (now, body.note or row["note"], body.cursor_id),
-        )
-        open_left = conn.execute(
-            """SELECT COUNT(*) c FROM excursion_cursors
-               WHERE batch_id=? AND status='开放'""",
-            (row["batch_id"],),
-        ).fetchone()["c"]
-        if open_left == 0:
+        lock_key = f"batch:{row['batch_id']}"
+        # 硬闸门：闭游标会回写 temp_batches 状态，须先持批次锁，拒占即零改拒写
+        require_lock(conn, lock_key, user)
+        try:
+            now = now_iso()
             conn.execute(
-                "UPDATE temp_batches SET status='已入库' WHERE id=? AND status='超温处理中'",
-                (row["batch_id"],),
+                """UPDATE excursion_cursors SET status='已闭', closed_at=?, note=?
+                   WHERE id=?""",
+                (now, body.note or row["note"], body.cursor_id),
             )
-        write_audit(conn, user, "excursion_close", row["cursor_key"], {})
-        conn.commit()
-        return {"id": body.cursor_id, "status": "已闭", "closed_at": now}
+            open_left = conn.execute(
+                """SELECT COUNT(*) c FROM excursion_cursors
+                   WHERE batch_id=? AND status='开放'""",
+                (row["batch_id"],),
+            ).fetchone()["c"]
+            if open_left == 0:
+                conn.execute(
+                    "UPDATE temp_batches SET status='已入库' WHERE id=? AND status='超温处理中'",
+                    (row["batch_id"],),
+                )
+            write_audit(conn, user, "excursion_close", row["cursor_key"], {})
+            conn.commit()
+            return {"id": body.cursor_id, "status": "已闭", "closed_at": now}
+        finally:
+            release(conn, lock_key, user)

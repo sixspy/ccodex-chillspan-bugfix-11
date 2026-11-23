@@ -1,4 +1,9 @@
-"""仓间配额 vs 在批差额对账 + 互证只读。"""
+"""仓间配额 vs 在批差额对账 + 互证只读。
+
+锁批门禁同源（甲路径）：对账口径 active_batches 只统计 temp_batches 正式表，
+该表写口已被 require_lock 硬闸门封死（拒占零增），不存在无锁正式批，
+因此配额互证不会把无锁批次计入在批；本服务全部为只读，不开任何写路径。
+"""
 from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException

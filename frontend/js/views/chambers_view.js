@@ -1,7 +1,7 @@
 export const chambersViewTemplate = `
 <section class="panel">
   <h2>冷库仓间</h2>
-  <p class="hint">各区域冷库仓间目标温区、在批配额与运行状态。</p>
+  <p class="hint">各区域冷库仓间目标温区、在批配额与运行状态。在批清单仅含持锁写入的正式批次，无锁拒写批次不会计入。</p>
   <div class="grid-2">
     <div>
       <motion-form class="form-block">

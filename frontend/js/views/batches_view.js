@@ -1,7 +1,7 @@
 export const batchesViewTemplate = `
 <section class="panel">
-  <h2>温控批次（埋雷：无锁仍可创建）入库</h2>
-  <p class="hint">写入温度点 JSON 数组；入库后可开超温游标与封批。</p>
+  <h2>温控批次入库</h2>
+  <p class="hint">写入温度点 JSON 数组；入库后可开超温游标与封批。锁批门禁：须先持仓间锁，占锁被拒则整笔拒写（409），正式批次零增，不产生待锁/影子批次。</p>
   <div class="form-row">
     <div><label>仓间</label>
       <select v-model.number="batchForm.chamber_id"><option v-for="c in chambers" :key="c.id" :value="c.id">{{ c.chamber_code }}</option></select>
